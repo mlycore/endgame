@@ -12,7 +12,7 @@ Finding a [example](https://github.com/kubernetes/kubernetes/blob/master/test/e2
 
 ------
 
-###1. Headless Service
+### 1. Headless Service
 A Headless Service is such a Service whose `type` is  ClusterIP at the meanwhile `clusterIP` is None. Here is a example:
 ```yaml
 apiVersion: v1
@@ -42,7 +42,7 @@ With Headless Service we could identify the pod using a short domain name in the
 
 [More details about Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services).
 
-###2. Persistent Volume
+### 2. Persistent Volume
 As its name saying, Persistent Volume provides an durable data storage. We could consider it as an abstraction of storage and placed with Kubernetes first-class resources. Operators who are administrators knowing the volumes of cluster and actual storage system should create Persistent Volumes with specific size. Developers who run applications want persistent storage only need to claim a persistent volume(Persistent Volume Claim). Then the Persistent Volume Claim and the Persistent Volume get bounded, everything goes well. 
 
 What we talked about in the last paragraph is called "Static Provisioning", there also have "Dynamic Provisioning". Using StorageClass specific storage provider who will create a corresponding PV once a PVC is created. That truly save operators life.
@@ -144,7 +144,7 @@ volumeBindingMode: Immediate
 
 [More details about Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
-###3. StatefulSet
+### 3. StatefulSet
 
 We should treat our applications as Cattles but not Pets, however, we should use StatefulSet if it's really a pet.
 
