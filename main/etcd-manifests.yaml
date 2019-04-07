@@ -5,7 +5,7 @@ metadata:
   labels:
     app: etcd
   name: etcd
-  namespace: default
+  namespace: endgame
 spec:
   clusterIP: None
   ports:
@@ -30,7 +30,7 @@ metadata:
   labels:
     app: etcd
   name: etcd
-  namespace: default
+  namespace: endgame
 spec:
   podManagementPolicy: OrderedReady
   replicas: 3
