@@ -2,7 +2,9 @@
 title="endgame"
 
 csrName=${title}.${title}
-tmpdir=$(mktemp -d)
+#tmpdir=$(mktemp -d)
+mkdir -p certs/
+tmpdir="certs"
 echo "creating certs in tmpdir ${tmpdir} "
 
 cat <<EOF >> ${tmpdir}/csr.conf
@@ -66,5 +68,3 @@ if [[ ${serverCert} == '' ]]; then
     exit 1
 fi
 echo ${serverCert} | openssl base64 -d -A -out ${tmpdir}/server-cert.pem
-cp ${tmpdir}/server-cert.pem ./
-cp ${tmpdir}/server-key.pem ./

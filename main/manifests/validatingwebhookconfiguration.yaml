@@ -5,7 +5,7 @@ metadata:
   namespace: endgame
 webhooks:
 - clientConfig:
-    caBundle: "" 
+    caBundle: {CA_BUNDLE}
     service:
       name: endgame
       namespace: endgame
