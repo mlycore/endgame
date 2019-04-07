@@ -1,3 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: endgame
+spec:
+  finalizers:
+  - kubernetes
 ---
 apiVersion: v1
 kind: Service
@@ -170,4 +177,3 @@ spec:
           storage: 1Gi
     status:
       phase: Pending
-
