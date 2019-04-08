@@ -47,6 +47,7 @@ func execInPod(namespace, podName, containerName string, commands []string) ([]s
 	})
 	if err != nil {
 		log.Errorf("remotecmd stream execute error: %s", err)
+		log.Tracef("remotecmd strema execute error: stdout=%v, stderr=%s", stdOut.Str, stdErr.Str)
 		return nil, nil, err
 	}
 	return stdOut.Str, stdErr.Str, nil
@@ -107,6 +108,7 @@ func checkUnregisterStatus(namespace, podName, containerName string) (bool, stri
 
 	var memberhash string
 	hostname := podName
+	log.Infof("cnt=%d", cnt)
 	cnt--
 	if cnt == 0 {
 		for _, s := range stdout {
