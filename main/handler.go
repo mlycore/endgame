@@ -65,11 +65,12 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 				// otherwise will not.
 				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name)
 				if ok {
+					reviewResp.Response.Allowed = false
 					break
 				}
 				log.Tracef("hostname=%s, memberhash=%s", hostname, memberhash)
 				stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
-				log.Tracef("amespace=%s, podName=%s, ncontainerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
+				log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
 			}
 			break
 		}
