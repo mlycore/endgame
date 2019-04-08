@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +52,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	reviewResp := makeAdmissionReview(true, "")
 	for _, container := range pod.Spec.Containers {
 		if "etcd" == container.Name {
-			log.Tracef("admission review request: pod=%s, namespace=%s, operation=%s, uid=%s", time.Now().String(), req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
+			log.Tracef("admission review request: pod=%s, namespace=%s, operation=%s, uid=%s", req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
 			// ValidatingAdmissionWebhook will receive two requests,
 			// one for object turns into Terminating (set the DeletionTimestamp),
 			// another for the object purged,

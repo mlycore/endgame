@@ -87,6 +87,7 @@ func newStringReader(ss []string) io.Reader {
 	return reader
 }
 
+// Writer used for retrieve remotecmd execute results
 type Writer struct {
 	Str []string
 }
@@ -99,8 +100,6 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	return len(str), nil
 }
 
-var cnt = 3
-
 // CheckUnregisterStatus helps check if the node finished unregister work
 func checkUnregisterStatus(namespace, podName, containerName string) (bool, string) {
 	stdout, stderr, _ := execInPod(namespace, podName, containerName, []string{"etcdctl", "member", "list"})
@@ -108,15 +107,11 @@ func checkUnregisterStatus(namespace, podName, containerName string) (bool, stri
 
 	var memberhash string
 	hostname := podName
-	log.Infof("cnt=%d", cnt)
-	cnt--
-	if cnt == 0 {
-		for _, s := range stdout {
-			if strings.Contains(s, "name="+hostname) {
-				log.Tracef("member list s: %v", s)
-				memberhash = strings.Split(s, ":")[0]
-				return false, memberhash
-			}
+	for _, s := range stdout {
+		if strings.Contains(s, "name="+hostname) {
+			log.Tracef("member list s: %v", s)
+			memberhash = strings.Split(s, ":")[0]
+			return false, memberhash
 		}
 	}
 
