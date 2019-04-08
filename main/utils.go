@@ -1,15 +1,16 @@
-package main 
+package main
+
 import (
-	"strings"
-	"io"
 	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/admission/v1beta1"
-	"k8s.io/client-go/tools/remotecommand"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/remotecommand"
 )
 
 // execInPod implements a remote command execution of Pods.
@@ -70,13 +71,13 @@ func requestError(err error) *v1beta1.AdmissionReview {
 }
 
 // admissionReviewEncoding is used for json marshal the admission review response
-func admissionReviewEncoding(ar *v1beta1.AdmissionReview) ([]byte, error) {
+func admissionReviewEncoding(ar *v1beta1.AdmissionReview) []byte {
 	resp, err := json.Marshal(ar)
 	if err != nil {
 		log.Errorf("response marshal error: %s", err)
-		return nil, err
+		return nil
 	}
-	return resp, nil
+	return resp
 }
 
 func newStringReader(ss []string) io.Reader {
@@ -97,3 +98,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	return len(str), nil
 }
 
+// CheckUnregisterStatus helps check if the node finished unregister work
+func checkUnregisterStatus() bool {
+	// TODO:
+}

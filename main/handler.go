@@ -1,18 +1,16 @@
 package main
+
 import (
-	"fmt"
-	"strings"
-	"errors"
-	"time"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
-	"strconv"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
 
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
 
 // Etcd scale down Pod validating admission
 func etcdHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +19,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("read request error: %s", err)
 		respAr := requestError(err)
-		resp, _ := admissionReviewEncoding(respAr)
+		resp := admissionReviewEncoding(respAr)
 		w.Write(resp)
 		return
 	}
@@ -29,7 +27,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &req); err != nil {
 		log.Errorf("read request error: %s", err)
 		respAr := requestError(err)
-		resp, _ := admissionReviewEncoding(respAr)
+		resp := admissionReviewEncoding(respAr)
 		w.Write(resp)
 		return
 	}
@@ -39,7 +37,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Request.Resource != podResource {
 		log.Errorf("not a Pod admission request")
 		respAr := requestError(errors.New("not a Pod admission request"))
-		resp, _ := admissionReviewEncoding(respAr)
+		resp := admissionReviewEncoding(respAr)
 		w.Write(resp)
 		return
 	}
@@ -48,7 +46,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("get requested pod error: %s", err)
 		respAr := requestError(errors.New("not a Pod admission request"))
-		resp, _ := admissionReviewEncoding(respAr)
+		resp := admissionReviewEncoding(respAr)
 		w.Write(resp)
 		return
 	}
@@ -56,7 +54,14 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	reviewResp := makeAdmissionReview(true, "")
 	for _, container := range pod.Spec.Containers {
 		if "etcd" == container.Name {
-			log.Tracef("request: [%s] pod=%s, namespace=%s, operation=%s, uid=%s", time.Now().String(), req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
+			// Check if this node finished unregister work.
+			// If done will allow this AdmissionReview request,
+			// otherwise will not.
+			// if checkUnregisterStatus() {
+			//     break
+			// }
+
+			log.Tracef("admission review request: pod=%s, namespace=%s, operation=%s, uid=%s", time.Now().String(), req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
 			// ValidatingAdmissionWebhook will receive two requests,
 			// one for object turns into Terminating (set the DeletionTimestamp),
 			// another for the object purged,
@@ -68,7 +73,7 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 				hostname := pod.Name
 				for _, s := range stdout {
 					if strings.Contains(s, "name="+hostname) {
-						log.Tracef("s: %v", s)
+						log.Tracef("member list s: %v", s)
 						memberhash = strings.Split(s, ":")[0]
 						break
 					}
@@ -87,7 +92,6 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 		log.Infof("Pod %s validate admission failed", pod.Name)
 	}
 
-	resp, _ := admissionReviewEncoding(reviewResp)
+	resp := admissionReviewEncoding(reviewResp)
 	w.Write(resp)
 }
-

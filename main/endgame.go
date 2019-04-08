@@ -8,13 +8,13 @@ import (
 
 	"path/filepath"
 
+	mlog "github.com/maxwell92/gokits/log"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
-	mlog "github.com/maxwell92/gokits/log"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
@@ -49,4 +49,3 @@ func main() {
 	http.HandleFunc("/etcd", etcdHandler)
 	http.ListenAndServeTLS(":443", "../certs/server-cert.pem", "../certs/server-key.pem", nil)
 }
-
