@@ -99,6 +99,18 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 }
 
 // CheckUnregisterStatus helps check if the node finished unregister work
-func checkUnregisterStatus() bool {
-	// TODO:
+func checkUnregisterStatus(namespace, podName, containerName string) (bool, string) {
+	stdout, stderr, _ := execInPod(namespace, podName, containerName, []string{"etcdctl", "member", "list"})
+	log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", namespace, podName, containerName, stdout, stderr)
+
+	var memberhash string
+	hostname := podName
+	for _, s := range stdout {
+		if strings.Contains(s, "name="+hostname) {
+			log.Tracef("member list s: %v", s)
+			memberhash = strings.Split(s, ":")[0]
+			return false, memberhash
+		}
+	}
+	return true, ""
 }

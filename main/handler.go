@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"k8s.io/api/admission/v1beta1"
@@ -66,22 +65,14 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 			// one for object turns into Terminating (set the DeletionTimestamp),
 			// another for the object purged,
 			if pod.DeletionTimestamp == nil {
-				stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "list"})
-				log.Tracef("podName=%s, namespace=%s, containerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
-
-				var memberhash string
 				hostname := pod.Name
-				for _, s := range stdout {
-					if strings.Contains(s, "name="+hostname) {
-						log.Tracef("member list s: %v", s)
-						memberhash = strings.Split(s, ":")[0]
-						break
-					}
+				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name)
+				if ok {
+					break
 				}
-
 				log.Tracef("hostname=%s, memberhash=%s", hostname, memberhash)
-				stdout, stderr, _ = execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
-				log.Tracef("podName=%s, namespace=%s, containerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
+				stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
+				log.Tracef("amespace=%s, podName=%s, ncontainerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
 			}
 			break
 		}
