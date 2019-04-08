@@ -53,19 +53,16 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 	reviewResp := makeAdmissionReview(true, "")
 	for _, container := range pod.Spec.Containers {
 		if "etcd" == container.Name {
-			// Check if this node finished unregister work.
-			// If done will allow this AdmissionReview request,
-			// otherwise will not.
-			// if checkUnregisterStatus() {
-			//     break
-			// }
-
 			log.Tracef("admission review request: pod=%s, namespace=%s, operation=%s, uid=%s", time.Now().String(), req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
 			// ValidatingAdmissionWebhook will receive two requests,
 			// one for object turns into Terminating (set the DeletionTimestamp),
 			// another for the object purged,
 			if pod.DeletionTimestamp == nil {
 				hostname := pod.Name
+
+				// Check if this node finished unregister work.
+				// If done will allow this AdmissionReview request,
+				// otherwise will not.
 				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name)
 				if ok {
 					break
