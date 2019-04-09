@@ -19,19 +19,19 @@ import (
 // about the register status of this node.
 func checkUnregisterStatus(namespace, podName string, container corev1.Container, client kubernetes.KubeClient) (bool, string) {
 	var initialClusterSize, setName string
-	for _, v := range container.Env {
-		if v.Name == "INITIAL_CLUSTER_SIZE" {
-			initialClusterSize = v.Value
+	for _, e := range container.Env {
+		if "INITIAL_CLUSTER_SIZE" == e.Name {
+			initialClusterSize = e.Value
 		}
-		if v.Name == "SET_NAME" {
-			setName = v.Value
+		if "SET_NAME" == e.Name {
+			setName = e.Value
 		}
 	}
 
 	hostname := podName
 	var eps string
-	s, _ := strconv.Atoi(initialClusterSize)
-	for i := 0; i < s; i++ {
+	size, _ := strconv.Atoi(initialClusterSize)
+	for i := 0; i < size; i++ {
 		eps += fmt.Sprintf("http://etcd-%d.%s:2379,", i, setName)
 	}
 	eps = strings.TrimSuffix(eps, ",")
