@@ -1,51 +1,33 @@
-package main
+package etcd
 
 import (
-	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"net/http"
 
-	"k8s.io/api/admission/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"kubernetes"
 )
 
-// Etcd scale down Pod validating admission
-func etcdHandler(w http.ResponseWriter, r *http.Request) {
-	req := &v1beta1.AdmissionReview{}
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Errorf("read request error: %s", err)
-		respAr := requestError(err)
-		resp := admissionReviewEncoding(respAr)
-		w.Write(resp)
-		return
-	}
+type EtcdHandler struct {
+	Client *kubernetes.KubeClient
+}
 
-	if err := json.Unmarshal(data, &req); err != nil {
-		log.Errorf("read request error: %s", err)
-		respAr := requestError(err)
-		resp := admissionReviewEncoding(respAr)
-		w.Write(resp)
+func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
+	req, err := c.ReadAdmissionReview(r)	
+	if err != nil {
+		c.WriteError(w, fmt.Sprintf("%s", err), err)
 		return
 	}
 
 	// Verify if it is a AdmissionReviewRequest about Pods
 	podResource := metav1.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
 	if req.Request.Resource != podResource {
-		log.Errorf("not a Pod admission request")
-		respAr := requestError(errors.New("not a Pod admission request"))
-		resp := admissionReviewEncoding(respAr)
-		w.Write(resp)
+		c.WriteError(w, "not a Pod admission request", nil)
 		return
 	}
 
 	pod, err := clientset.CoreV1().Pods(req.Request.Namespace).Get(req.Request.Name, metav1.GetOptions{})
 	if err != nil {
 		log.Errorf("get requested pod error: %s", err)
-		respAr := requestError(errors.New("not a Pod admission request"))
-		resp := admissionReviewEncoding(respAr)
-		w.Write(resp)
+		c.WriteError(w, "", err)
 		return
 	}
 
@@ -62,13 +44,14 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 				// Check if this node finished unregister work.
 				// If done will allow this AdmissionReview request,
 				// otherwise will not.
-				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name)
+				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name, c.Client)
 				if ok {
 					reviewResp.Response.Allowed = false
 					break
 				}
 				log.Tracef("hostname=%s, memberhash=%s", hostname, memberhash)
-				stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
+				// stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
+				stdout, stderr, _ := c.Client.ExecInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
 				log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
 			}
 			break
@@ -82,4 +65,31 @@ func etcdHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp := admissionReviewEncoding(reviewResp)
 	w.Write(resp)
+
+}
+
+func (c *EtcdHandler)ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionReview, error) {
+	req := &v1beta1.AdmissionReview{}
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Debugf("read request error: %s", err)
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &req)
+	if err != nil {
+		log.Debugf("read request error: %s", err)
+		return nil, err
+	}
+	return req, nil
+}
+
+func (c *EtcdHandler)WriteError(w http.ResponseWriter, message string, err error) {
+	resp := NewAdmissionReviewError(err)
+	w.Write(resp)
+}
+
+func NewAdmissionReviewError(err error) []byte {
+	ar := NewAdmissionReview(false, fmt.Sprintf("%s", err))
+	return EncodeAdmissionReview(ar)
 }
