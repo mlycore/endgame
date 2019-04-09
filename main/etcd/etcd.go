@@ -1,17 +1,25 @@
 package etcd
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
-	"kubernetes"
+	mlog "github.com/maxwell92/gokits/log"
+	"github.com/mlycore/endgame/main/kubernetes"
+	"k8s.io/api/admission/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var log = mlog.Log
+
 type EtcdHandler struct {
-	Client *kubernetes.KubeClient
+	Client kubernetes.KubeClient
 }
 
 func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
-	req, err := c.ReadAdmissionReview(r)	
+	req, err := c.ReadAdmissionReview(r)
 	if err != nil {
 		c.WriteError(w, fmt.Sprintf("%s", err), err)
 		return
@@ -24,14 +32,13 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pod, err := clientset.CoreV1().Pods(req.Request.Namespace).Get(req.Request.Name, metav1.GetOptions{})
-	if err != nil {
-		log.Errorf("get requested pod error: %s", err)
-		c.WriteError(w, "", err)
+	pod := c.Client.GetPod(req.Request.Namespace, req.Request.Name)
+	if pod == nil {
+		c.WriteError(w, "get requested pod error", nil)
 		return
 	}
 
-	reviewResp := makeAdmissionReview(true, "")
+	reviewResp := NewAdmissionReview(true, "")
 	for _, container := range pod.Spec.Containers {
 		if "etcd" == container.Name {
 			log.Tracef("admission review request: pod=%s, namespace=%s, operation=%s, uid=%s", req.Request.Name, req.Request.Namespace, req.Request.Operation, req.Request.UID)
@@ -63,12 +70,12 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 		log.Infof("Pod %s validate admission failed", pod.Name)
 	}
 
-	resp := admissionReviewEncoding(reviewResp)
+	resp := EncodeAdmissionReview(reviewResp)
 	w.Write(resp)
 
 }
 
-func (c *EtcdHandler)ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionReview, error) {
+func (c *EtcdHandler) ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionReview, error) {
 	req := &v1beta1.AdmissionReview{}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -84,12 +91,7 @@ func (c *EtcdHandler)ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionRev
 	return req, nil
 }
 
-func (c *EtcdHandler)WriteError(w http.ResponseWriter, message string, err error) {
+func (c *EtcdHandler) WriteError(w http.ResponseWriter, message string, err error) {
 	resp := NewAdmissionReviewError(err)
 	w.Write(resp)
-}
-
-func NewAdmissionReviewError(err error) []byte {
-	ar := NewAdmissionReview(false, fmt.Sprintf("%s", err))
-	return EncodeAdmissionReview(ar)
 }

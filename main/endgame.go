@@ -24,7 +24,7 @@ func init() {
 func main() {
 	c := kubernetes.KubernetesClientset()
 	etcd := &etcd.EtcdHandler{
-		Client: c.Clientset,
+		Client: c,
 	}
 	http.HandleFunc("/etcd", etcd.GracefulStop)
 	http.ListenAndServeTLS(":443", "../certs/server-cert.pem", "../certs/server-key.pem", nil)

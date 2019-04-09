@@ -1,12 +1,9 @@
-package kubernetes 
+package kubernetes
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
 	"path/filepath"
 
-	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -17,17 +14,24 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
+	mlog "github.com/maxwell92/gokits/log"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+var log = mlog.Log
+
+var _ KubeClient = &Client{}
+
 type KubeClient interface {
 	ExecInPod(namespace, podName, containerName string, commands []string) ([]string, []string, error)
+	GetPod(namespace, podName string) *corev1.Pod
 }
 
-type Client struct{
+type Client struct {
 	Config *rest.Config
 	*kubernetes.Clientset
 }
+
 /*
 var config *rest.Config
 var clientset *kubernetes.Clientset
@@ -52,14 +56,14 @@ func KubernetesClientset() *Client {
 		log.Fatalf("init client with config error: %s", err)
 	}
 	return &Client{
-		Config: config,
+		Config:    config,
 		Clientset: clientset,
-	} 
+	}
 }
 
-// execInPod implements a remote command execution of Pods.
-func (c *Client)ExecInPod(namespace, podName, containerName string, commands []string) ([]string, []string, error) {
-	req := clientset.CoreV1().RESTClient().Post().
+// ExecInPod implements a remote command execution of Pods.
+func (c *Client) ExecInPod(namespace, podName, containerName string, commands []string) ([]string, []string, error) {
+	req := c.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(podName).
 		Namespace(namespace).
@@ -74,7 +78,7 @@ func (c *Client)ExecInPod(namespace, podName, containerName string, commands []s
 
 	log.Tracef("remotecmd curl=%v", req.URL())
 
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	exec, err := remotecommand.NewSPDYExecutor(c.Config, "POST", req.URL())
 	if err != nil {
 		log.Debugf("remotecmd SPDY setup error: %s", err)
 		return nil, nil, err
@@ -97,3 +101,12 @@ func (c *Client)ExecInPod(namespace, podName, containerName string, commands []s
 	return stdOut.Str, stdErr.Str, nil
 }
 
+// GetPod will retrieve a pod from the cluster
+func (c *Client) GetPod(namespace, podName string) *corev1.Pod {
+	pod, err := c.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		log.Errorf("get pod error: %s", err)
+		return nil
+	}
+	return pod
+}

@@ -1,28 +1,15 @@
-package etcd 
+package etcd
 
 import (
-	"io"
+	"encoding/json"
+	"fmt"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/mlycore/endgame/main/kubernetes"
+	"k8s.io/api/admission/v1beta1"
 )
-
-func newStringReader(ss []string) io.Reader {
-	formattedString := strings.Join(ss, "\n")
-	reader := strings.NewReader(formattedString)
-	return reader
-}
-
-// Writer used for retrieve remotecmd execute results
-type Writer struct {
-	Str []string
-}
-
-func (w *Writer) Write(p []byte) (n int, err error) {
-	str := string(p)
-	if len(str) > 0 {
-		w.Str = append(w.Str, str)
-	}
-	return len(str), nil
-}
 
 // CheckUnregisterStatus helps check if the node finished unregister work
 func checkUnregisterStatus(namespace, podName, containerName string, client kubernetes.KubeClient) (bool, string) {
@@ -42,7 +29,6 @@ func checkUnregisterStatus(namespace, podName, containerName string, client kube
 	return true, ""
 }
 
-
 // NewAdmissionReview will make any AdmissionReview
 func NewAdmissionReview(allow bool, message string) *v1beta1.AdmissionReview {
 	return &v1beta1.AdmissionReview{
@@ -54,8 +40,6 @@ func NewAdmissionReview(allow bool, message string) *v1beta1.AdmissionReview {
 		},
 	}
 }
-
-
 
 // EncodeAdmissionReview is used for json marshal the admission review response
 func EncodeAdmissionReview(ar *v1beta1.AdmissionReview) []byte {
