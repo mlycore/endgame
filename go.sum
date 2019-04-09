@@ -26,6 +26,8 @@ github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvW
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/maxwell92/gokits v0.0.0-20190408025006-6ed9a3e9b8da h1:cn96pXx9wwY1jSf+ky0VAsK5335JzxqxOCx1qw1jykc=
 github.com/maxwell92/gokits v0.0.0-20190408025006-6ed9a3e9b8da/go.mod h1:St05to934ruxUIz0uCAF5ncg419zC6ShVCg9MYsNGwY=
+github.com/maxwell92/log v0.0.0-20190409071748-9fa58c2b201a h1:2cfTEA+a+nySKXovWVoMGAPICyCjBXDg4Xz7UTXmBfA=
+github.com/maxwell92/log v0.0.0-20190409071748-9fa58c2b201a/go.mod h1:0JNzjmTjhzWy2WSW1dkYPrit6sL2cFcz8SIEUI/+5cU=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9AWI=

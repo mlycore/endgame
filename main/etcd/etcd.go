@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	mlog "github.com/maxwell92/gokits/log"
+	mlog "github.com/maxwell92/log"
 	"github.com/mlycore/endgame/main/kubernetes"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,10 +14,14 @@ import (
 
 var log = mlog.Log
 
+// EtcdHandler is responsible for handling etcd graceful stop
 type EtcdHandler struct {
 	Client kubernetes.KubeClient
 }
 
+// GracefulStop will first check if this member is still registered.
+// If registered, then triggger etcdctl member remove a with remote command execution.
+// Otherwise will give a allow AdmissionReviewResponse.
 func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 	req, err := c.ReadAdmissionReview(r)
 	if err != nil {
@@ -75,6 +79,7 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ReadAdmissionReview will read object from request and save it to an AdmissionReview
 func (c *EtcdHandler) ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionReview, error) {
 	req := &v1beta1.AdmissionReview{}
 	data, err := ioutil.ReadAll(r.Body)
@@ -91,6 +96,7 @@ func (c *EtcdHandler) ReadAdmissionReview(r *http.Request) (*v1beta1.AdmissionRe
 	return req, nil
 }
 
+// WriteError is used for write error response
 func (c *EtcdHandler) WriteError(w http.ResponseWriter, message string, err error) {
 	resp := NewAdmissionReviewError(err)
 	w.Write(resp)

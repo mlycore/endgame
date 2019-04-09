@@ -14,30 +14,26 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
-	mlog "github.com/maxwell92/gokits/log"
+	mlog "github.com/maxwell92/log"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 var log = mlog.Log
-
 var _ KubeClient = &Client{}
 
+// KubeClient describe the expected Kubeclient behavior in this system
 type KubeClient interface {
 	ExecInPod(namespace, podName, containerName string, commands []string) ([]string, []string, error)
 	GetPod(namespace, podName string) *corev1.Pod
 }
 
+// Client is built upon the real Kubernetes client-go
 type Client struct {
 	Config *rest.Config
 	*kubernetes.Clientset
 }
 
-/*
-var config *rest.Config
-var clientset *kubernetes.Clientset
-*/
-
-// kubernetesClientset create kubernetes clients
+// KubernetesClientset create kubernetes clients
 func KubernetesClientset() *Client {
 	var kubeconfig *string
 	var err error

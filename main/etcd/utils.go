@@ -51,6 +51,7 @@ func EncodeAdmissionReview(ar *v1beta1.AdmissionReview) []byte {
 	return resp
 }
 
+// NewAdmissionReviewError used for make error AdmissionReview quickly
 func NewAdmissionReviewError(err error) []byte {
 	ar := NewAdmissionReview(false, fmt.Sprintf("%s", err))
 	return EncodeAdmissionReview(ar)
