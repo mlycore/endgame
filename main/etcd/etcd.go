@@ -49,6 +49,7 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 			// ValidatingAdmissionWebhook will receive two requests,
 			// one for object turns into Terminating (set the DeletionTimestamp),
 			// another for the object purged,
+			// the first request will trigger a graceful stop procedure.
 			if pod.DeletionTimestamp == nil {
 				hostname := pod.Name
 
@@ -61,7 +62,6 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				log.Tracef("hostname=%s, memberhash=%s", hostname, memberhash)
-				// stdout, stderr, _ := execInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
 				stdout, stderr, _ := c.Client.ExecInPod(pod.Namespace, pod.Name, container.Name, []string{"etcdctl", "member", "remove", memberhash})
 				log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", pod.Name, pod.Namespace, container.Name, stdout, stderr)
 			}
@@ -76,7 +76,6 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 
 	resp := EncodeAdmissionReview(reviewResp)
 	w.Write(resp)
-
 }
 
 // ReadAdmissionReview will read object from request and save it to an AdmissionReview

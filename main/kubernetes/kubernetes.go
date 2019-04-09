@@ -91,7 +91,7 @@ func (c *Client) ExecInPod(namespace, podName, containerName string, commands []
 	})
 	if err != nil {
 		log.Errorf("remotecmd stream execute error: %s", err)
-		log.Tracef("remotecmd strema execute error: stdout=%v, stderr=%s", stdOut.Str, stdErr.Str)
+		log.Tracef("remotecmd stream execute error: stdout=%v, stderr=%s", stdOut.Str, stdErr.Str)
 		return nil, nil, err
 	}
 	return stdOut.Str, stdErr.Str, nil
