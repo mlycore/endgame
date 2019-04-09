@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mlycore/endgame/main/etcd"
+	"github.com/mlycore/endgame/main/kubernetes"
 
 	mlog "github.com/maxwell92/gokits/log"
 )
