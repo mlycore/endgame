@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mlycore/endgame/etcd"
+	"github.com/mlycore/endgame/main/etcd"
 
 	mlog "github.com/maxwell92/gokits/log"
 )
