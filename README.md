@@ -28,7 +28,7 @@ Use `make build` in *main/* directory to build up the experiment envrionment if 
 
 The results turn out good and the etcd cluster always works.
 
-![](https://github.com/mlycore/endgame/pics/result.png)
+![](https://github.com/mlycore/endgame/blob/master/pics/result.png)
 
 Use `make clean` to cleanup.
 
