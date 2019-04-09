@@ -3,19 +3,21 @@ package etcd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/mlycore/endgame/main/kubernetes"
-	"k8s.io/api/admission/v1beta1"
 )
 
 // CheckUnregisterStatus helps check if the node finished unregister work
 // When the command executed failed if the node should be considered unregistered successfully?
 // If the container has already been stopped or restarting, the command is going to be failed, means nothing
 // about the register status of this node.
-func checkUnregisterStatus(namespace, podName, containerName string, client kubernetes.KubeClient) (bool, string) {
+func checkUnregisterStatus(namespace, podName string, container corev1.Container, client kubernetes.KubeClient) (bool, string) {
 	var initialClusterSize, setName string
 	for _, v := range container.Env {
 		if v.Name == "INITIAL_CLUSTER_SIZE" {
@@ -35,8 +37,8 @@ func checkUnregisterStatus(namespace, podName, containerName string, client kube
 	eps = strings.TrimSuffix(eps, ",")
 	log.Tracef("eps=%s\n", eps)
 
-	stdout, stderr, _ := client.ExecInPod(namespace, podName, containerName, []string{"etcdctl", "--endpoints", eps, "member", "list"})
-	log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", namespace, podName, containerName, stdout, stderr)
+	stdout, stderr, _ := client.ExecInPod(namespace, podName, container.Name, []string{"etcdctl", "--endpoints", eps, "member", "list"})
+	log.Tracef("namespace=%s, podName=%s, containerName=%s, stdout=%v, stderr=%v", namespace, podName, container.Name, stdout, stderr)
 
 	var memberhash string
 	for _, s := range stdout {

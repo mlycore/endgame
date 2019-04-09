@@ -56,7 +56,7 @@ func (c *EtcdHandler) GracefulStop(w http.ResponseWriter, r *http.Request) {
 				// Check if this node finished unregister work.
 				// If done will allow this AdmissionReview request,
 				// otherwise will not.
-				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container.Name, c.Client)
+				ok, memberhash := checkUnregisterStatus(pod.Namespace, pod.Name, container, c.Client)
 				if ok {
 					reviewResp.Response.Allowed = false
 					break
