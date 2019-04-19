@@ -53,6 +53,15 @@ spec:
           fi
           SET_ID=${HOSTNAME:5:${#HOSTNAME}}
           if [ "${SET_ID}" -ge ${INITIAL_CLUSTER_SIZE} ]; then
+              export ETCD_INITIAL_CLUSTER_STATE=existing
+              echo $ETCD_INITIAL_CLUSTER_STATE
+              PEERS=""
+              for i in $(seq 0 ${SET_ID}); do
+                  PEERS="${PEERS}${PEERS:+,}${SET_NAME}-${i}=http://${SET_NAME}-${i}.${SET_NAME}:2380"
+              done
+              export ETCD_INITIAL_CLUSTER=${PEERS}
+              echo $ETCD_INITIAL_CLUSTER
+
               export ETCDCTL_ENDPOINT=$(eps)
               MEMBER_HASH=$(member_hash)
               if [ -n "${MEMBER_HASH}" ]; then
