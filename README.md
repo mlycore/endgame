@@ -17,9 +17,20 @@ Finally when the node has already unregistered, we allow the Admission Requets, 
 
 When scaling down, the desired state is going to mismatch the actual state if the requests are blocked by the Validating Admission Webhook, several subsequential Pod DELETE requests will be sent in the reconcile loops of the controller. All of the requests will be handled by the webhook and only when the node is truely unregistered, the last request should be allowed and the Pod will be purged. 
 
+This sequence diagram is placed below
+![](https://github.com/mlycore/endgame/blob/master/pics/seq.png)
+
+More prerequsition contents please check *prerequisite* directory.
+
 ### Verification
 
-We write a shell scripts to simulate continuous data write / read to the etcd cluster while scaling down. The results turn out good and the etcd cluster always works.
+Use `make build` in *main/* directory to build up the experiment envrionment if using GKE (modifications are needed if using other cloud vendors). After the 3 etcd Pods turns into Running, we run the `endgame` server in *main/bin* and start to send simulate continuous data write / read request to the etcd cluster with script *main/scripts* `verify.sh`.
+
+The results turn out good and the etcd cluster always works.
+
+![](https://github.com/mlycore/endgame/blob/master/pics/result.png)
+
+Use `make clean` to cleanup.
 
 ## Undetermined Issues
 
